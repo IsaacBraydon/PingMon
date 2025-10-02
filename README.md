@@ -29,14 +29,20 @@ $logFile = "ping_log.txt" # Custom log file path
 
 
 ### Interface Overview
-
 Status: Online (green) / Offline (red)
+
 Last Online: 2023-10-05 14:30:22
+
 Last Offline: 2023-10-05 14:25:15
+
 --------------------- Event Log ---------------------
+
 [2023-10-05 14:25:15] Offline (red)
+
 [2023-10-05 14:30:22] Online (green)
+
 [2023-10-05 14:32:45] 5 consecutive failures
+
 
 Current Latency: 24 ms
 
