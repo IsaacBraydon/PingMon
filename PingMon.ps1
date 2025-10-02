@@ -12,8 +12,8 @@ $currentDelay = $null
 
 function Update-Status {
     Clear-Host
-    # å›ºå®šçŠ¶æ€æ  (å§‹ç»ˆæ˜¾ç¤º)
-    # çŠ¶æ€è¡Œä½¿ç”¨é¢œè‰²åŒºåˆ†
+    # ¹Ì¶¨×´Ì¬À¸ (Ê¼ÖÕÏÔÊ¾)
+    # ×´Ì¬ĞĞÊ¹ÓÃÑÕÉ«Çø·Ö
     if ($online) {
         Write-Host "Status: " -NoNewline
         Write-Host "Online" -ForegroundColor Green
@@ -26,10 +26,10 @@ function Update-Status {
     Write-Host "Last Offline: $(if ($lastOffline) {$lastOffline.ToString('yyyy-MM-dd HH:mm:ss')} else {'N/A'})"
     Write-Host "--------------------- EventLog ---------------------"
     
-    # æ˜¾ç¤ºäº‹ä»¶æ—¥å¿— (ä¿ç•™æœ€æ–°è®°å½•)
+    # ÏÔÊ¾ÊÂ¼şÈÕÖ¾ (±£Áô×îĞÂ¼ÇÂ¼)
     $startIndex = [Math]::Max(0, $eventLog.Count - 10)
     for ($i = $startIndex; $i -lt $eventLog.Count; $i++) {
-        # äº‹ä»¶æ—¥å¿—ä¸­çš„ä¸Šçº¿/ä¸‹çº¿ä¹Ÿæ·»åŠ é¢œè‰²
+        # ÊÂ¼şÈÕÖ¾ÖĞµÄÉÏÏß/ÏÂÏßÒ²Ìí¼ÓÑÕÉ«
         if ($eventLog[$i] -match "Online") {
             Write-Host $eventLog[$i] -ForegroundColor Green
         } elseif ($eventLog[$i] -match "Offline") {
@@ -39,7 +39,7 @@ function Update-Status {
         }
     }
     
-    # å»¶è¿Ÿä¿¡æ¯å•ç‹¬æ˜¾ç¤ºåœ¨æ—¥å¿—ä¸‹æ–¹ï¼ˆå®æ—¶åˆ·æ–°ï¼‰
+    # ÑÓ³ÙĞÅÏ¢µ¥¶ÀÏÔÊ¾ÔÚÈÕÖ¾ÏÂ·½£¨ÊµÊ±Ë¢ĞÂ£©
     Write-Host "----------------------"
     Write-Host "Current latency: $(if ($online -and $currentDelay) {"$currentDelay ms"} else {'N/A'})"
 }
@@ -47,7 +47,7 @@ function Update-Status {
 try {
     while ($true) {
         $ping = Test-Connection $ip -Count 1 -ErrorAction SilentlyContinue
-        $currentDelay = $ping.ResponseTime  # æ¯æ¬¡å¾ªç¯æ›´æ–°å»¶è¿Ÿå€¼
+        $currentDelay = $ping.ResponseTime  # Ã¿´ÎÑ­»·¸üĞÂÑÓ³ÙÖµ
         
         if ($ping) {
             $consecutiveFails = 0
@@ -59,7 +59,7 @@ try {
                 Update-Status
             }
             else {
-                # åœ¨çº¿çŠ¶æ€æŒç»­æ—¶åªåˆ·æ–°å»¶è¿Ÿ
+                # ÔÚÏß×´Ì¬³ÖĞøÊ±Ö»Ë¢ĞÂÑÓ³Ù
                 Update-Status
             }
         }
@@ -80,7 +80,7 @@ try {
                 Update-Status
             }
             else {
-                # ç¦»çº¿çŠ¶æ€æŒç»­æ—¶åˆ·æ–°å»¶è¿Ÿæ˜¾ç¤º
+                # ÀëÏß×´Ì¬³ÖĞøÊ±Ë¢ĞÂÑÓ³ÙÏÔÊ¾
                 $currentDelay = $null
                 Update-Status
             }
