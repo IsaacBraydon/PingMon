@@ -12,8 +12,6 @@ $currentDelay = $null
 
 function Update-Status {
     Clear-Host
-    # ¹Ì¶¨×´Ì¬À¸ (Ê¼ÖÕÏÔÊ¾)
-    # ×´Ì¬ĞĞÊ¹ÓÃÑÕÉ«Çø·Ö
     if ($online) {
         Write-Host "Status: " -NoNewline
         Write-Host "Online" -ForegroundColor Green
@@ -26,10 +24,8 @@ function Update-Status {
     Write-Host "Last Offline: $(if ($lastOffline) {$lastOffline.ToString('yyyy-MM-dd HH:mm:ss')} else {'N/A'})"
     Write-Host "--------------------- EventLog ---------------------"
     
-    # ÏÔÊ¾ÊÂ¼şÈÕÖ¾ (±£Áô×îĞÂ¼ÇÂ¼)
     $startIndex = [Math]::Max(0, $eventLog.Count - 10)
     for ($i = $startIndex; $i -lt $eventLog.Count; $i++) {
-        # ÊÂ¼şÈÕÖ¾ÖĞµÄÉÏÏß/ÏÂÏßÒ²Ìí¼ÓÑÕÉ«
         if ($eventLog[$i] -match "Online") {
             Write-Host $eventLog[$i] -ForegroundColor Green
         } elseif ($eventLog[$i] -match "Offline") {
@@ -39,15 +35,22 @@ function Update-Status {
         }
     }
     
-    # ÑÓ³ÙĞÅÏ¢µ¥¶ÀÏÔÊ¾ÔÚÈÕÖ¾ÏÂ·½£¨ÊµÊ±Ë¢ĞÂ£©
     Write-Host "----------------------"
-    Write-Host "Current latency: $(if ($online -and $currentDelay) {"$currentDelay ms"} else {'N/A'})"
+    # ä¿®å¤å»¶è¿Ÿæ˜¾ç¤ºé€»è¾‘
+    Write-Host "Current latency: $(if ($online -and $null -ne $currentDelay) {"$currentDelay ms"} else {'N/A'})"
 }
 
 try {
+    # æ·»åŠ åˆå§‹çŠ¶æ€æ£€æµ‹
+    $ping = Test-Connection $ip -Count 1 -ErrorAction SilentlyContinue
+    $online = [bool]$ping
+    $currentDelay = $ping.ResponseTime
+    if ($online) { $lastOnline = Get-Date } else { $lastOffline = Get-Date }
+    Update-Status
+
     while ($true) {
         $ping = Test-Connection $ip -Count 1 -ErrorAction SilentlyContinue
-        $currentDelay = $ping.ResponseTime  # Ã¿´ÎÑ­»·¸üĞÂÑÓ³ÙÖµ
+        $currentDelay = $ping.ResponseTime
         
         if ($ping) {
             $consecutiveFails = 0
@@ -56,10 +59,10 @@ try {
                 $now = Get-Date
                 $lastOnline = $now
                 $eventLog.Add("[$($now.ToString('yyyy-MM-dd HH:mm:ss'))] Device Online.")
+                $eventLog[-1] | Out-File $logFile -Append
                 Update-Status
             }
             else {
-                # ÔÚÏß×´Ì¬³ÖĞøÊ±Ö»Ë¢ĞÂÑÓ³Ù
                 Update-Status
             }
         }
@@ -70,17 +73,17 @@ try {
                 $now = Get-Date
                 $lastOffline = $now
                 $eventLog.Add("[$($now.ToString('yyyy-MM-dd HH:mm:ss'))] Device Offline.")
+                $eventLog[-1] | Out-File $logFile -Append
                 Update-Status
             }
             elseif ($consecutiveFails -eq 5) {
                 $now = Get-Date
-                $logEntry = "[$($now.ToString('yyyy-MM-dd HH:mm:ss'))] failed with 5 times."
+                $logEntry = "[$($now.ToString('yyyy-MM-dd HH:mm:ss'))] Connection failed with 5 times."
                 $eventLog.Add($logEntry)
                 $logEntry | Out-File $logFile -Append
                 Update-Status
             }
             else {
-                # ÀëÏß×´Ì¬³ÖĞøÊ±Ë¢ĞÂÑÓ³ÙÏÔÊ¾
                 $currentDelay = $null
                 Update-Status
             }
