@@ -1,5 +1,8 @@
-$ip = "192.168.31.201"
+# Edit here to change the IP that you wanted to monitor.
+$ip = "127.0.0.1"
+# Default event log would saved at the location of this script.
 $logFile = "ping_log.txt"
+
 $online = $false
 $lastOnline = $null
 $lastOffline = $null
