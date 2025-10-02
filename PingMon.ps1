@@ -22,7 +22,7 @@ function Update-Status {
     
     Write-Host "Last Online: $(if ($lastOnline) {$lastOnline.ToString('yyyy-MM-dd HH:mm:ss')} else {'N/A'})"
     Write-Host "Last Offline: $(if ($lastOffline) {$lastOffline.ToString('yyyy-MM-dd HH:mm:ss')} else {'N/A'})"
-    Write-Host "--------------------- EventLog ---------------------"
+    Write-Host "--------------------- Event Log ---------------------"
     
     $startIndex = [Math]::Max(0, $eventLog.Count - 10)
     for ($i = $startIndex; $i -lt $eventLog.Count; $i++) {
@@ -36,16 +36,35 @@ function Update-Status {
     }
     
     Write-Host "----------------------"
-    # 修复延迟显示逻辑
+    # 显示当前延迟
     Write-Host "Current latency: $(if ($online -and $null -ne $currentDelay) {"$currentDelay ms"} else {'N/A'})"
+    
+    # 添加0 ms延迟警告
+    if ($online -and $null -ne $currentDelay -and $currentDelay -eq 0) {
+        Write-Host ""
+        Write-Host "WARNING: 0 ms latency detected!" -ForegroundColor Red
+        Write-Host "This may indicate:" -ForegroundColor Yellow
+        Write-Host "- Local loopback interface (127.0.0.1 or localhost)" -ForegroundColor Yellow
+        Write-Host "- VPN connection affecting monitoring" -ForegroundColor Yellow
+        Write-Host "- Network configuration issues" -ForegroundColor Yellow
+        Write-Host "Monitoring accuracy may be affected." -ForegroundColor Yellow
+    }
 }
 
 try {
-    # 添加初始状态检测
+    # 初始状态检测
     $ping = Test-Connection $ip -Count 1 -ErrorAction SilentlyContinue
     $online = [bool]$ping
     $currentDelay = $ping.ResponseTime
-    if ($online) { $lastOnline = Get-Date } else { $lastOffline = Get-Date }
+    if ($online) { 
+        $lastOnline = Get-Date 
+        # 初始状态也检查0ms警告
+        if ($currentDelay -eq 0) {
+            $eventLog.Add("[$((Get-Date).ToString('yyyy-MM-dd HH:mm:ss'))] WARNING: Initial connection has 0ms latency!")
+        }
+    } else { 
+        $lastOffline = Get-Date 
+    }
     Update-Status
 
     while ($true) {
@@ -58,11 +77,25 @@ try {
                 $online = $true
                 $now = Get-Date
                 $lastOnline = $now
-                $eventLog.Add("[$($now.ToString('yyyy-MM-dd HH:mm:ss'))] Device Online.")
-                $eventLog[-1] | Out-File $logFile -Append
+                
+                # 上线时检查是否为0ms延迟
+                $logEntry = if ($currentDelay -eq 0) {
+                    "[$($now.ToString('yyyy-MM-dd HH:mm:ss'))] Device Online. WARNING: 0ms latency!"
+                } else {
+                    "[$($now.ToString('yyyy-MM-dd HH:mm:ss'))] Device Online."
+                }
+                
+                $eventLog.Add($logEntry)
+                $logEntry | Out-File $logFile -Append
                 Update-Status
             }
             else {
+                # 持续在线时也记录0ms延迟事件
+                if ($currentDelay -eq 0 -and $eventLog[-1] -notmatch "0ms latency") {
+                    $logEntry = "[$((Get-Date).ToString('yyyy-MM-dd HH:mm:ss'))] WARNING: 0ms latency detected!"
+                    $eventLog.Add($logEntry)
+                    $logEntry | Out-File $logFile -Append
+                }
                 Update-Status
             }
         }
@@ -72,8 +105,9 @@ try {
                 $online = $false
                 $now = Get-Date
                 $lastOffline = $now
-                $eventLog.Add("[$($now.ToString('yyyy-MM-dd HH:mm:ss'))] Device Offline.")
-                $eventLog[-1] | Out-File $logFile -Append
+                $logEntry = "[$($now.ToString('yyyy-MM-dd HH:mm:ss'))] Device Offline."
+                $eventLog.Add($logEntry)
+                $logEntry | Out-File $logFile -Append
                 Update-Status
             }
             elseif ($consecutiveFails -eq 5) {
