@@ -61,10 +61,7 @@ Press `Ctrl + C` to exit
 
 ## Requirements
 - Windows PowerShell 5.1+
-- Windows OS
+- Windows 10 or upper version
 
 ## License
 Distributed under the MIT License. See `LICENSE` for more information.
-
----
-**Simplified network monitoring** - PingMon helps you quickly identify connectivity issues
