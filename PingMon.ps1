@@ -39,10 +39,10 @@ function Update-Status {
     # 显示当前延迟
     Write-Host "Current latency: $(if ($online -and $null -ne $currentDelay) {"$currentDelay ms"} else {'N/A'})"
      
-    # 添加0ms延迟警告
+    # 添加0 ms延迟警告
     if ($online -and $null -ne $currentDelay -and $currentDelay -eq 0) {
         Write-Host ""
-        Write-Host "WARNING: 0ms latency detected!" -ForegroundColor Red
+        Write-Host "WARNING: 0 ms latency detected!" -ForegroundColor Red
         Write-Host "This may indicate:" -ForegroundColor Yellow
         Write-Host "- Local loopback interface (127.0.0.1 or localhost)" -ForegroundColor Yellow
         Write-Host "- VPN connection affecting monitoring" -ForegroundColor Yellow
@@ -91,7 +91,7 @@ try {
             }
             else {
                 # 持续在线时也记录0 ms延迟事件
-                if ($currentDelay -eq 0 -and $eventLog[-1] -notmatch "0ms latency") {
+                if ($currentDelay -eq 0 -and $eventLog[-1] -notmatch "0 ms latency") {
                     $logEntry = "[$((Get-Date).ToString('yyyy-MM-dd HH:mm:ss'))] WARNING: 0 ms latency detected!"
                     $eventLog.Add($logEntry)
                     $logEntry | Out-File $logFile -Append
