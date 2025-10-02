@@ -22,7 +22,7 @@ function Update-Status {
     
     Write-Host "Last Online: $(if ($lastOnline) {$lastOnline.ToString('yyyy-MM-dd HH:mm:ss')} else {'N/A'})"
     Write-Host "Last Offline: $(if ($lastOffline) {$lastOffline.ToString('yyyy-MM-dd HH:mm:ss')} else {'N/A'})"
-    Write-Host "--------------------- Event Log ---------------------"
+    Write-Host "--------------------- EventLog ---------------------"
     
     $startIndex = [Math]::Max(0, $eventLog.Count - 10)
     for ($i = $startIndex; $i -lt $eventLog.Count; $i++) {
@@ -36,13 +36,13 @@ function Update-Status {
     }
     
     Write-Host "----------------------"
-    # æ˜¾ç¤ºå½“å‰å»¶è¿Ÿ
+    # ÏÔÊ¾µ±Ç°ÑÓ³Ù
     Write-Host "Current latency: $(if ($online -and $null -ne $currentDelay) {"$currentDelay ms"} else {'N/A'})"
-    
-    # æ·»åŠ 0 mså»¶è¿Ÿè­¦å‘Š
+     
+    # Ìí¼Ó0msÑÓ³Ù¾¯¸æ
     if ($online -and $null -ne $currentDelay -and $currentDelay -eq 0) {
         Write-Host ""
-        Write-Host "WARNING: 0 ms latency detected!" -ForegroundColor Red
+        Write-Host "WARNING: 0ms latency detected!" -ForegroundColor Red
         Write-Host "This may indicate:" -ForegroundColor Yellow
         Write-Host "- Local loopback interface (127.0.0.1 or localhost)" -ForegroundColor Yellow
         Write-Host "- VPN connection affecting monitoring" -ForegroundColor Yellow
@@ -52,15 +52,15 @@ function Update-Status {
 }
 
 try {
-    # åˆå§‹çŠ¶æ€æ£€æµ‹
+    # ³õÊ¼×´Ì¬¼ì²â
     $ping = Test-Connection $ip -Count 1 -ErrorAction SilentlyContinue
     $online = [bool]$ping
     $currentDelay = $ping.ResponseTime
     if ($online) { 
         $lastOnline = Get-Date 
-        # åˆå§‹çŠ¶æ€ä¹Ÿæ£€æŸ¥0msè­¦å‘Š
+        # ³õÊ¼×´Ì¬Ò²¼ì²é0 ms¾¯¸æ
         if ($currentDelay -eq 0) {
-            $eventLog.Add("[$((Get-Date).ToString('yyyy-MM-dd HH:mm:ss'))] WARNING: Initial connection has 0ms latency!")
+            $eventLog.Add("[$((Get-Date).ToString('yyyy-MM-dd HH:mm:ss'))] WARNING: Initial connection has 0 ms latency!")
         }
     } else { 
         $lastOffline = Get-Date 
@@ -78,9 +78,9 @@ try {
                 $now = Get-Date
                 $lastOnline = $now
                 
-                # ä¸Šçº¿æ—¶æ£€æŸ¥æ˜¯å¦ä¸º0mså»¶è¿Ÿ
+                # ÉÏÏßÊ±¼ì²éÊÇ·ñÎª0 msÑÓ³Ù
                 $logEntry = if ($currentDelay -eq 0) {
-                    "[$($now.ToString('yyyy-MM-dd HH:mm:ss'))] Device Online. WARNING: 0ms latency!"
+                    "[$($now.ToString('yyyy-MM-dd HH:mm:ss'))] Device Online. WARNING: 0 ms latency!"
                 } else {
                     "[$($now.ToString('yyyy-MM-dd HH:mm:ss'))] Device Online."
                 }
@@ -90,9 +90,9 @@ try {
                 Update-Status
             }
             else {
-                # æŒç»­åœ¨çº¿æ—¶ä¹Ÿè®°å½•0mså»¶è¿Ÿäº‹ä»¶
+                # ³ÖĞøÔÚÏßÊ±Ò²¼ÇÂ¼0 msÑÓ³ÙÊÂ¼ş
                 if ($currentDelay -eq 0 -and $eventLog[-1] -notmatch "0ms latency") {
-                    $logEntry = "[$((Get-Date).ToString('yyyy-MM-dd HH:mm:ss'))] WARNING: 0ms latency detected!"
+                    $logEntry = "[$((Get-Date).ToString('yyyy-MM-dd HH:mm:ss'))] WARNING: 0 ms latency detected!"
                     $eventLog.Add($logEntry)
                     $logEntry | Out-File $logFile -Append
                 }
